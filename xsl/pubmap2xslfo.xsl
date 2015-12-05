@@ -40,82 +40,85 @@
          currently no way to extend it.
          
     -->
-    <xsl:variable name="topicType">
-      <xsl:call-template name="determineTopicType"/>
-    </xsl:variable>
-    <xsl:choose>
-      <!-- Pubmap stuff -->
-      <xsl:when test="$topicType = 'pubmapPart'">
-        <xsl:call-template name="processPubmapPart"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'pubmapChapter'">
-        <xsl:call-template name="processPubmapChapter"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'pubmapSidebar'">
-        <xsl:call-template name="processPubmapSidebar"/>
-      </xsl:when>
-      <!-- original stuff -->
-      <xsl:when test="$topicType = 'topicChapter'">
-        <xsl:call-template name="processTopicChapter"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'topicAppendix'">
-        <xsl:call-template name="processTopicAppendix"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'topicPart'">
-        <xsl:call-template name="processTopicPart"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'topicPreface'">
-        <xsl:call-template name="processTopicPreface"/>
-      </xsl:when>
-      <xsl:when test="$topicType = 'topicNotices'">
-        <!-- Suppressed in normal processing, since it goes at the beginning of the book. -->
-        <!-- <xsl:call-template name="processTopicNotices"/> -->
-      </xsl:when>
-      <xsl:when test="$topicType = 'topicSimple'">
-        <xsl:variable name="page-sequence-reference">
-          <xsl:choose>
-            <xsl:when test="$mapType = 'bookmap'">
-              <xsl:value-of select="'body-sequence'"/>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="'ditamap-body-sequence'"/>
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:variable>
-        <xsl:choose>
-          <xsl:when test="not(ancestor::*[contains(@class,' topic/topic ')])">
-            <fo:page-sequence master-reference="{$page-sequence-reference}" xsl:use-attribute-sets="__force__page__count">
-              <xsl:call-template name="insertBodyStaticContents"/>
-              <fo:flow flow-name="xsl-region-body">
+      <xsl:variable name="topicType">
+          <xsl:call-template name="determineTopicType"/>
+      </xsl:variable>
+
+      <xsl:choose>
+        <!-- Pubmap stuff -->
+        <xsl:when test="$topicType = 'pubmapPart'">
+          <xsl:call-template name="processPubmapPart"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'pubmapChapter'">
+          <xsl:call-template name="processPubmapChapter"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'pubmapSidebar'">
+          <xsl:call-template name="processPubmapSidebar"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicChapter'">
+            <xsl:call-template name="processTopicChapter"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicAppendix'">
+            <xsl:call-template name="processTopicAppendix"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicAppendices'">
+            <xsl:call-template name="processTopicAppendices"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicPart'">
+            <xsl:call-template name="processTopicPart"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicPreface'">
+            <xsl:call-template name="processTopicPreface"/>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicNotices'">
+            <xsl:if test="$retain-bookmap-order">
+              <xsl:call-template name="processTopicNotices"/>
+            </xsl:if>
+        </xsl:when>
+        <xsl:when test="$topicType = 'topicSimple'">
+            <xsl:variable name="page-sequence-reference">
                 <xsl:choose>
-                  <xsl:when test="contains(@class,' concept/concept ')"><xsl:call-template name="processConcept"/></xsl:when>
-                  <xsl:when test="contains(@class,' task/task ')"><xsl:call-template name="processTask"/></xsl:when>
-                  <xsl:when test="contains(@class,' reference/reference ')"><xsl:call-template name="processReference"/></xsl:when>
-                  <xsl:otherwise><xsl:call-template name="processTopic"/></xsl:otherwise>
+                    <xsl:when test="$mapType = 'bookmap'">
+                        <xsl:value-of select="'body-sequence'"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="'ditamap-body-sequence'"/>
+                    </xsl:otherwise>
                 </xsl:choose>
-              </fo:flow>
-            </fo:page-sequence>
+            </xsl:variable>
+            <xsl:choose>
+                <xsl:when test="not(ancestor::*[contains(@class,' topic/topic ')]) and not(ancestor::ot-placeholder:glossarylist)">
+                    <fo:page-sequence master-reference="{$page-sequence-reference}" xsl:use-attribute-sets="__force__page__count">
+                        <xsl:call-template name="startPageNumbering"/>
+                        <xsl:call-template name="insertBodyStaticContents"/>
+                        <fo:flow flow-name="xsl-region-body">
+                            <xsl:choose>
+                                <xsl:when test="contains(@class,' concept/concept ')"><xsl:apply-templates select="." mode="processConcept"/></xsl:when>
+                                <xsl:when test="contains(@class,' task/task ')"><xsl:apply-templates select="." mode="processTask"/></xsl:when>
+                                <xsl:when test="contains(@class,' reference/reference ')"><xsl:apply-templates select="." mode="processReference"/></xsl:when>
+                                <xsl:otherwise><xsl:apply-templates select="." mode="processTopic"/></xsl:otherwise>
+                            </xsl:choose>
+                        </fo:flow>
+                    </fo:page-sequence>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="contains(@class,' concept/concept ')"><xsl:apply-templates select="." mode="processConcept"/></xsl:when>
+                        <xsl:when test="contains(@class,' task/task ')"><xsl:apply-templates select="." mode="processTask"/></xsl:when>
+                        <xsl:when test="contains(@class,' reference/reference ')"><xsl:apply-templates select="." mode="processReference"/></xsl:when>
+                        <xsl:otherwise><xsl:apply-templates select="." mode="processTopic"/></xsl:otherwise>
+                    </xsl:choose>
+                </xsl:otherwise>
+            </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:choose>
-              <xsl:when test="contains(@class,' concept/concept ')"><xsl:call-template name="processConcept"/></xsl:when>
-              <xsl:when test="contains(@class,' task/task ')"><xsl:call-template name="processTask"/></xsl:when>
-              <xsl:when test="contains(@class,' reference/reference ')"><xsl:call-template name="processReference"/></xsl:when>
-              <xsl:otherwise><xsl:call-template name="processTopic"/></xsl:otherwise>
-            </xsl:choose>
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:when>
-      <!--BS: skipp abstract (copyright) from usual content. It will be processed from the front-matter-->
-      <xsl:when test="$topicType = 'topicAbstract'"/>
-      <xsl:otherwise>
-        <xsl:call-template name="processUnknowTopic">
-          <xsl:with-param name="topicType" select="$topicType"/>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
+            <xsl:apply-templates select="." mode="processUnknowTopic">
+                <xsl:with-param name="topicType" select="$topicType"/>
+            </xsl:apply-templates>
+        </xsl:otherwise>
+      </xsl:choose>
   </xsl:template>
-  
+
   <xsl:template name="insertPartStaticContents">
     <xsl:call-template name="insertBodyStaticContents"/>
   </xsl:template>
