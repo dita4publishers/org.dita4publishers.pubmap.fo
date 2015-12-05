@@ -7,6 +7,8 @@
   exclude-result-prefixes="xs ot-placeholder"
   version="2.0">
   <!-- Pubmap to XSLFO extensions for DITA Open Toolkit's PDF2 transform. 
+    
+       Copyright (c) DITA For Publishers 2010, 2015
   
   -->
   
