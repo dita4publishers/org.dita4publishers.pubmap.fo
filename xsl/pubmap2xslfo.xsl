@@ -15,6 +15,13 @@
     <xsl:text>pubmapPart</xsl:text>
   </xsl:template>
   
+  <!-- Handle unspecialized or unhandled topicrefs that are direct children of pubmap or bookmap part elements. These
+       should be treated as chapters.
+    -->
+  <xsl:template match="*[contains(@class, '/part ')]/*[contains(@class, 'map/topicref')]" mode="determineTopicType" priority="5">
+    <xsl:text>pubmapChapter</xsl:text>
+  </xsl:template>
+  
   <xsl:template match="*[contains(@class, ' pubmap-d/chapter ')]" mode="determineTopicType" priority="10">
     <xsl:text>pubmapChapter</xsl:text>
   </xsl:template>
@@ -37,43 +44,69 @@
   
   
   <xsl:template match="*[contains(@class, ' topic/topic ')]">
+    <xsl:param name="doDebug" as="xs:boolean" tunnel="yes" select="false()"/>
     <!-- This is a copy of this template from commons.xsl, since there's
          currently no way to extend it.
          
     -->
       <xsl:variable name="topicType">
-          <xsl:call-template name="determineTopicType"/>
+          <xsl:call-template name="determineTopicType">
+            <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+          </xsl:call-template>
       </xsl:variable>
+    
+    <xsl:if test="$doDebug">
+      <xsl:message> + [DEBUG] topic/topic: <xsl:value-of select="concat(name(..), '/', name(.))"/></xsl:message>
+      <xsl:message> + [DEBUG] topic/topic: topicType="<xsl:value-of select="$topicType"/>"</xsl:message>
+    </xsl:if>
 
       <xsl:choose>
         <!-- Pubmap stuff -->
         <xsl:when test="$topicType = 'pubmapPart'">
-          <xsl:call-template name="processPubmapPart"/>
+          <xsl:call-template name="processPubmapPart">
+            <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'pubmapChapter'">
-          <xsl:call-template name="processPubmapChapter"/>
+          <xsl:call-template name="processPubmapChapter">
+            <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'pubmapSidebar'">
-          <xsl:call-template name="processPubmapSidebar"/>
+          <xsl:call-template name="processPubmapSidebar">
+            <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+          </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicChapter'">
-            <xsl:call-template name="processTopicChapter"/>
+            <xsl:call-template name="processTopicChapter">
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+            </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicAppendix'">
-            <xsl:call-template name="processTopicAppendix"/>
+            <xsl:call-template name="processTopicAppendix">
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+            </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicAppendices'">
-            <xsl:call-template name="processTopicAppendices"/>
+            <xsl:call-template name="processTopicAppendices">
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+            </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicPart'">
-            <xsl:call-template name="processTopicPart"/>
+            <xsl:call-template name="processTopicPart">
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+            </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicPreface'">
-            <xsl:call-template name="processTopicPreface"/>
+            <xsl:call-template name="processTopicPreface">
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+            </xsl:call-template>
         </xsl:when>
         <xsl:when test="$topicType = 'topicNotices'">
             <xsl:if test="$retain-bookmap-order">
-              <xsl:call-template name="processTopicNotices"/>
+              <xsl:call-template name="processTopicNotices">
+                <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+              </xsl:call-template>
             </xsl:if>
         </xsl:when>
         <xsl:when test="$topicType = 'topicSimple'">
@@ -88,16 +121,24 @@
                 </xsl:choose>
             </xsl:variable>
             <xsl:choose>
-                <xsl:when test="not(ancestor::*[contains(@class,' topic/topic ')]) and not(ancestor::ot-placeholder:glossarylist)">
+                <xsl:when test="(not(ancestor::*[contains(@class,' topic/topic ')]) and 
+                                 not(ancestor::ot-placeholder:glossarylist)) 
+                                ">
                     <fo:page-sequence master-reference="{$page-sequence-reference}" xsl:use-attribute-sets="__force__page__count">
-                        <xsl:call-template name="startPageNumbering"/>
-                        <xsl:call-template name="insertBodyStaticContents"/>
+                        <xsl:call-template name="startPageNumbering">
+                          <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+                        </xsl:call-template>
+                        <xsl:call-template name="insertBodyStaticContents">
+                          <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+                        </xsl:call-template>
                         <fo:flow flow-name="xsl-region-body">
                             <xsl:choose>
                                 <xsl:when test="contains(@class,' concept/concept ')"><xsl:apply-templates select="." mode="processConcept"/></xsl:when>
                                 <xsl:when test="contains(@class,' task/task ')"><xsl:apply-templates select="." mode="processTask"/></xsl:when>
                                 <xsl:when test="contains(@class,' reference/reference ')"><xsl:apply-templates select="." mode="processReference"/></xsl:when>
-                                <xsl:otherwise><xsl:apply-templates select="." mode="processTopic"/></xsl:otherwise>
+                                <xsl:otherwise><xsl:apply-templates select="." mode="processTopic">
+                                  <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+                                </xsl:apply-templates></xsl:otherwise>
                             </xsl:choose>
                         </fo:flow>
                     </fo:page-sequence>
@@ -107,14 +148,17 @@
                         <xsl:when test="contains(@class,' concept/concept ')"><xsl:apply-templates select="." mode="processConcept"/></xsl:when>
                         <xsl:when test="contains(@class,' task/task ')"><xsl:apply-templates select="." mode="processTask"/></xsl:when>
                         <xsl:when test="contains(@class,' reference/reference ')"><xsl:apply-templates select="." mode="processReference"/></xsl:when>
-                        <xsl:otherwise><xsl:apply-templates select="." mode="processTopic"/></xsl:otherwise>
+                        <xsl:otherwise><xsl:apply-templates select="." mode="processTopic">
+                          <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+                        </xsl:apply-templates></xsl:otherwise>
                     </xsl:choose>
                 </xsl:otherwise>
             </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
             <xsl:apply-templates select="." mode="processUnknowTopic">
-                <xsl:with-param name="topicType" select="$topicType"/>
+              <xsl:with-param name="doDebug" as="xs:boolean" tunnel="yes" select="$doDebug"/>
+              <xsl:with-param name="topicType" select="$topicType"/>
             </xsl:apply-templates>
         </xsl:otherwise>
       </xsl:choose>
