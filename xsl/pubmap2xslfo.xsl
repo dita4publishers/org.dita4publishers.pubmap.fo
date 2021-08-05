@@ -5,7 +5,7 @@
   xmlns:fo="http://www.w3.org/1999/XSL/Format"
   xmlns:ot-placeholder="http://suite-sol.com/namespaces/ot-placeholder"
   exclude-result-prefixes="xs ot-placeholder"
-  version="2.0">
+  version="3.0">
   <!-- Pubmap to XSLFO extensions for DITA Open Toolkit's PDF2 transform. 
     
        Copyright (c) DITA For Publishers 2010, 2015
